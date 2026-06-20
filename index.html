@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ARTLIFE OS</title>
+<style>
+* {box-sizing:border-box; margin:0; padding:0; user-select:none; -webkit-tap-highlight-color:transparent}
+body {
+  background:#000;
+  color:white;
+  font-family:Arial,sans-serif;
+  height:100vh;
+  overflow:hidden;
+  overscroll-behavior:none;
+  padding-bottom:80px; /* REZERVA PRO DOCK ABY NEBYL SCHOVANEJ */
+}
+
+/* 3 OKNA VEDLE SEBE */
+.slider {
+  display:flex;
+  width:300vw;
+  height:100%;
+  transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  scroll-snap-type:x mandatory;
+}
+.page {
+  width:100vw;
+  padding:20px 20px 100px 20px; /* SPODNÍ PADDING KVŮLI DOCKU */
+  overflow-y:auto;
+  scroll-snap-align:start;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* NADPISY */
+h1 {
+  font-size:28px;
+  margin-bottom:20px;
+  text-shadow:0 0 15px currentColor;
+}
+.hub h1 {color:#00ff88}
+.centrum h1 {color:#bb00ff}
+
+/* MŘÍŽKA 3x3 */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+}
+.tile {
+  background:#0a0a0a;
+  border:2px solid #00ff88;
+  border-radius:25px;
+  aspect-ratio:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:10px;
+  transition:transform 0.15s ease;
+  box-shadow:0 0 20px #00ff8833;
+  touch-action:manipulation;
+}
+.tile:active {transform:scale(0.96)}
+.tile.icon {font-size:40px; margin-bottom:8px}
+.tile.name {font-size:14px; font-weight:bold}
+.tile.desc {font-size:11px; opacity:0.7; margin-top:3px}
+.tile.kitty {
+  border-color:#bb00ff;
+  box-shadow:0 0 25px #bb00ff66;
+}
+
+/* WIDGETY DOMŮ - 3 NAHOŘE */
+.widgets-top {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+  margin-bottom:15px;
+}
+.widget-top {
+  background:#0a0a0a;
+  border:2px solid #ff0033;
+  border-radius:25px;
+  aspect-ratio:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 20px #ff003333;
+  font-size:24px;
+}
+.widget-top small {
+  font-size:12px;
+  margin-top:5px;
+  opacity:0.8;
+}
+
+/* SEARCHBAR */
+.searchbar {
+  background:#0a0a0a;
+  border:2px solid #ff0033;
+  border-radius:50px;
+  padding:12px 20px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:15px;
+  box-shadow:0 0 20px #ff003333;
+}
+.searchbar input {
+  background:none;
+  border:none;
+  color:white;
+  flex:1;
+  outline:none;
+  font-size:15px;
+}
+
+/* DVA WIDGETY VEDLE SEBE - BATERKA + SLUNCE */
+.widgets-bottom {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+.widget-big {
+  background:#0a0a0a;
+  border:2px solid #ff0033;
+  border-radius:25px;
+  height:120px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 20px #ff003333;
+  padding:10px;
+}
+.widget-big.value {
+  font-size:32px;
+  color:#ff0033;
+  font-weight:bold;
+}
+.widget-big.icon-battery {
+  width:50px;
+  height:30px;
+  border:3px solid #ff0033;
+  border-radius:8px;
+  margin:8px 0;
+  position:relative;
+}
+.widget-big.icon-battery::after {
+  content:'';
+  position:absolute;
+  right:-6px;
+  top:8px;
+  width:4px;
+  height:14px;
+  background:#ff0033;
+  border-radius:2px;
+}
+.widget-big.label {
+  font-size:12px;
+  opacity:0.8;
+}
+.widget-big.sun-time {
+  font-size:18px;
+  margin:5px 0;
+}
+.widget-big.sun-bar {
+  width:80%;
+  height:4px;
+  background:linear-gradient(to right,orange,red);
+  border-radius:2px;
+  margin:8px 0;
+}
+
+/* DOCK DOLE - VŽDY VIDITELNEJ */
+.dock {
+  height:80px;
+  background:#0a0a0a;
+  border-top:2px solid #ff0033;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:25px;
+  box-shadow:0 -5px 20px #ff003333;
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100vw;
+  z-index:100;
+}
+.dock-btn {
+  width:55px;
+  height:55px;
+  background:#1a1a1a;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  transition:transform 0.15s ease;
+  touch-action:manipulation;
+}
+.dock-btn:active {transform:scale(0.9)}
+.dock-btn.kitty {
+  background:linear-gradient(135deg,#bb00ff,#ff00ff);
+  box-shadow:0 0 25px #bb00ffaa;
+  transform:scale(1.2);
+}
+
+/* KITTY MODAL */
+#kitty-modal {
+  position:fixed;
+  top:0; left:0;
+  width:100vw; height:100vh;
+  background:rgba(0,0,0,0.95);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+#kitty-window {
+  width:90%;
+  max-width:400px;
+  height:85vh;
+  max-height:700px;
+  background:#1a1a1a;
+  border:2px solid #bb00ff;
+  border-radius:25px;
+  box-shadow:0 0 40px #bb00ff88;
+  display:flex;
+  flex-direction:column;
+  padding:20px;
+}
+#kitty-avatar {
+  width:100%;
+  height:200px;
+  border-radius:20px;
+  border:3px solid #00ff00;
+  object-fit:contain;
+  background:#000;
+  margin-bottom:15px;
+}
+.glow-blue {box-shadow:0 0 20px #00befa; border-color:#00befa!important}
+.glow-red {box-shadow:0 0 20px #ff0000; border-color:#ff0000!important}
+.glow-green {box-shadow:0 0 20px #00ff00; border-color:#00ff00!important}
+#chat-window {
+  flex:1;
+  overflow-y:auto;
+  background:#0d0d0d;
+  border-radius:15px;
+  padding:10px;
+  margin-bottom:10px;
+  font-size:15px;
+  line-height:1.5;
+}
+#input-container {display:flex; gap:8px}
+#user-input {
+  flex:1;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #bb00ff;
+  background:#222;
+  color:white;
+  outline:none;
+  font-size:15px;
+}
+#send-btn {
+  padding:12px 18px;
+  background:#bb00ff;
+  border:none;
+  border-radius:12px;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:18px;
+}
+.close-btn {
+  position:absolute;
+  top:15px;
+  right:20px;
+  font-size:35px;
+  color:#bb00ff;
+  cursor:pointer;
+  z-index:1000;
+}
+</style>
+</head>
+<body>
+
+<!-- 3 OKNA VEDLE SEBE -->
+<div class="slider" id="slider">
+
+  <!-- 1. DOMŮ -->
+  <div class="page">
+    <div class="widgets-top">
+      <div class="widget-top">🕐<small>17:26</small></div>
+      <div class="widget-top">22°<small>Nupaky</small></div>
+      <div class="widget-top">🔊<small>63%</small></div>
+    </div>
+
+    <div class="searchbar">
+      <span>🔍</span>
+      <input type="text" placeholder="Hledat v Artlife OS...">
+      <span>🎤</span>
+    </div>
+
+    <!-- BATERKA + SLUNCE VEDLE SEBE -->
+    <div class="widgets-bottom">
+      <div class="widget-big">
+        <div class="value">87%</div>
+        <div class="icon-battery"></div>
+        <div class="label">Vybíjení</div>
+      </div>
+      <div class="widget-big">
+        <div class="sun-time">☀️ 04:53</div>
+        <div class="sun-bar"></div>
+        <div class="sun-time">🌙 21:07</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ARTLIFE HUB -->
+  <div class="page hub">
+    <h1>ARTLIFE HUB</h1>
+    <div class="grid">
+      <div class="tile"><div class="icon">🔦</div><div class="name">Baterka</div><div class="desc">Vypnuto</div></div>
+      <div class="tile"><div class="icon">📝</div><div class="name">Poznámky</div><div class="desc">Rychlý zápis</div></div>
+      <div class="tile"><div class="icon">🧮</div><div class="name">Kalkulačka</div><div class="desc">Počítání</div></div>
+      <div class="tile"><div class="icon">⚡</div><div class="name">CPU Teplota</div><div class="desc">Live</div></div>
+      <div class="tile"><div class="icon">💾</div><div class="name">Úložiště</div><div class="desc">Volno</div></div>
+      <div class="tile"><div class="icon">📱</div><div class="name">QR Skener</div><div class="desc">Sken</div></div>
+      <div class="tile"><div class="icon">🧭</div><div class="name">Kompas</div><div class="desc">Směr</div></div>
+      <div class="tile"><div class="icon">⏱️</div><div class="name">Stopky</div><div class="desc">Měření</div></div>
+      <div class="tile kitty" onclick="openKitty()"><div class="icon">K</div><div class="name">Kitty</div><div class="desc">Chat</div></div>
+    </div>
+  </div>
+
+  <!-- 3. SOCIÁLNÍ CENTRUM -->
+  <div class="page centrum">
+    <h1>SOCIÁLNÍ CENTRUM</h1>
+    <div class="grid">
+      <div class="tile"><div class="icon" style="font-size:35px;background:red;border-radius:15px;padding:10px">▶️</div><div class="name">YouTube</div><div class="desc">Odběry</div></div>
+      <div class="tile"><div class="icon" style="font-size:35px;border:2px solid red;border-radius:15px;padding:10px">🎵</div><div class="name">YT Music</div><div class="desc">Playlisty</div></div>
+      <div class="tile"><div class="icon" style="font-size:35px;background:#1877f2;border-radius:15px;padding:10px">f</div><div class="name">Facebook</div><div class="desc">Zeď</div></div>
+      <div class="tile"><div class="icon">♪</div><div class="name">TikTok</div><div class="desc">For You</div></div>
+      <div class="tile"><div class="icon">📷</div><div class="name">Instagram</div><div class="desc">Příspěvky</div></div>
+      <div class="tile kitty" onclick="openKitty()"><div class="icon" style="font-size:35px;background:linear-gradient(135deg,#bb00ff,#ff00ff);border-radius:15px;padding:10px;color:white">K</div><div class="name">Kitty</div><div class="desc">Asistent</div></div>
+      <div class="tile"><div class="icon">💬</div><div class="name">WhatsApp</div><div class="desc">Chaty</div></div>
+      <div class="tile"><div class="icon" style="background:#00b2ff;border-radius:15px;padding:10px">M</div><div class="name">Messenger</div><div class="desc">Zprávy</div></div>
+      <div class="tile"><div class="icon">✉️</div><div class="name">Gmail</div><div class="desc">Pošta</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- DOCK DOLE -->
+<div class="dock">
+  <div class="dock-btn">🏠</div>
+  <div class="dock-btn">💬</div>
+  <div class="dock-btn kitty" onclick="openKitty()">K</div>
+  <div class="dock-btn">⚙️</div>
+  <div class="dock-btn">📷</div>
+</div>
+
+<!-- KITTY CHAT MODAL -->
+<div id="kitty-modal">
+  <span class="close-btn" onclick="closeKitty()">×</span>
+  <div id="kitty-window">
+    <video id="kitty-avatar" src="kitty.mp4" autoplay loop muted playsinline webkit-playsinline></video>
+    <div id="chat-window">
+      <div style="color:#ff4081"><b>Kitty:</b> Ahoj parťáku! Jsem připravená ovládat tvoje Centrum 🚀</div>
+    </div>
+    <div id="input-container">
+      <input type="text" id="user-input" placeholder="Napiš Kitty příkaz...">
+      <button id="send-btn" onclick="odeslatZpravu()">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPage = 1;
+const slider = document.getElementById('slider');
+let startX = 0;
+let isDragging = false;
+
+document.addEventListener('touchstart', e => {
+  startX = e.touches[0].clientX;
+  isDragging = true;
+}, {passive:true});
+
+document.addEventListener('touchend', e => {
+  if(!isDragging) return;
+  isDragging = false;
+  let endX = e.changedTouches[0].clientX;
+  let diff = startX - endX;
+  if(Math.abs(diff) > 60) {
+    if(diff > 0 && currentPage < 2) currentPage++;
+    if(diff < 0 && currentPage > 0) currentPage--;
+  }
+  slider.style.transform = `translateX(-${currentPage * 100}vw)`;
+});
+
+function openKitty() {
+  document.getElementById('kitty-modal').style.display = 'flex';
+}
+function closeKitty() {
+  document.getElementById('kitty-modal').style.display = 'none';
+}
+</script>
+<script src="kitty-core.js"></script>
+</body>
+</html>
