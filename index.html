@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitty OS</title>
+    <style>
+        body { background-color: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        #avatar-container { margin-bottom: 20px; }
+        /* Styly pro video avatar */
+        #kitty-avatar { width: 200px; height: 200px; border-radius: 20px; border: 3px solid #00ff00; transition: 0.3s; object-fit: cover; }
+        .glow-blue { box-shadow: 0 0 20px #00befa; border-color: #00befa !important; }
+        .glow-red { box-shadow: 0 0 20px #ff0000; border-color: #ff0000 !important; }
+        .glow-green { box-shadow: 0 0 20px #00ff00; border-color: #00ff00 !important; }
+        #chat-window { width: 90%; max-width: 400px; height: 150px; background: #1e1e1e; border-radius: 10px; padding: 10px; overflow-y: auto; border: 1px solid #333; margin-bottom: 10px; }
+        #input-container { display: flex; width: 90%; max-width: 400px; }
+        input { flex: 1; padding: 10px; border-radius: 5px; border: none; background: #2a2a2a; color: white; }
+        button { padding: 10px; background: #ff4081; color: white; border: none; border-radius: 5px; margin-left: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="avatar-container">
+        <!-- Vylepšené spuštění videa s mobilními parametry pro bezchybné přehrávání -->
+        <video id="kitty-avatar" src="kitty.mp4" autoplay loop muted playsinline webkit-playsinline></video>
+    </div>
+
+    <div id="chat-window">
+        <div style="color: #ff4081;"><b>Kitty:</b> Ahoj parťáku! Jsem připravená v tvém novém systému Kitty OS. Napiš mi něco! 🚀</div>
+    </div>
+
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Napiš Kitty příkaz...">
+        <button onclick="odeslatZpravu()">Odeslat</button>
+    </div>
+
+    <script src="kitty-core.js"></script>
+</body>
+</html>
